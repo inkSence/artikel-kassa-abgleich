@@ -57,12 +57,12 @@ def filtere_artikel_nach_inkassa_und_lagerstand(daten: List[Dict[str, str]], aus
 
 def filtere_nach_stueckartikel(daten: List[Dict[str, str]], aktiv: bool = False) -> List[Dict[str, str]]:
     """
-    Filtert Artikel heraus, deren grundeinheit 'Stück' ist, falls aktiv True ist.
+    Filtert Artikel heraus, deren einheit 'Stück' ist, falls aktiv True ist.
     """
     if not aktiv:
         return daten
     
-    return [a for a in daten if a.get('grundeinheit') != 'Stück']
+    return [a for a in daten if a.get('einheit') != 'Stück']
 
 if __name__ == "__main__":
     # Ermöglicht das Testen des Moduls
