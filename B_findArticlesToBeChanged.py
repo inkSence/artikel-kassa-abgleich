@@ -3,6 +3,9 @@ import csv
 import os
 import glob
 
+# Liste der IDs, die nicht durchsucht werden müssen
+AUSSCHLUSS_IDS = ['40', '41', '42', '43']
+
 def filtere_artikel(daten):
     """
     Filtert die Artikel basierend auf Lagerstand und Kassaartikel-Status.
@@ -12,6 +15,12 @@ def filtere_artikel(daten):
     
     for zeile in daten:
         try:
+            artikel_id = zeile.get('ID', '')
+            
+            # Prüfen, ob die ID auf der Ausschlussliste steht
+            if artikel_id in AUSSCHLUSS_IDS:
+                continue
+                
             # Lagerstand konvertieren (Komma zu Punkt für float)
             lagerstand_str = zeile.get('lagerstand', '0').replace(',', '.')
             lagerstand = float(lagerstand_str)
@@ -55,6 +64,12 @@ if __name__ == "__main__":
         artikel_daten = A_FileSystem.lese_csv_tabelle(neueste_datei)
         gefilterte_artikel = filtere_artikel(artikel_daten)
         
-        print(f"{len(gefilterte_artikel)} Artikel gefunden, die geändert werden sollten.")
+        # Konfiguration laden und ggf. weiter filtern
+        config = A_FileSystem.lese_konfiguration()
+        if config.get("nur_ja_ausgeben"):
+            print("Filter aktiv: Nur Artikel mit 'ändern_auf: Ja' werden ausgegeben.")
+            gefilterte_artikel = [a for a in gefilterte_artikel if a['ändern_auf'] == 'Ja']
+        
+        print(f"{len(gefilterte_artikel)} Artikel gefunden, die ausgegeben werden.")
         
         A_FileSystem.schreibe_ergebnis_csv(gefilterte_artikel)

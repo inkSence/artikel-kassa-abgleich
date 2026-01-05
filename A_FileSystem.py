@@ -1,7 +1,27 @@
 import csv
 import os
+import json
+from datetime import datetime
 
-OUTPUT_PFAD = "output/artikel_vorschlaege.csv"
+OUTPUT_ORDNER = "output"
+BASIS_DATEINAME = "artikel_vorschlaege.csv"
+CONFIG_DATEI = "config.json"
+
+def lese_konfiguration():
+    """
+    Liest die Konfigurationsdatei ein.
+    Gibt ein Dictionary mit den Einstellungen zurück.
+    """
+    standard_config = {"nur_ja_ausgeben": False}
+    if not os.path.exists(CONFIG_DATEI):
+        return standard_config
+    
+    try:
+        with open(CONFIG_DATEI, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Fehler beim Lesen der Konfiguration: {e}")
+        return standard_config
 
 def lese_csv_tabelle(dateipfad):
     """
@@ -34,22 +54,27 @@ def schreibe_text_datei(dateipfad, inhalt):
 
 def schreibe_ergebnis_csv(daten):
     """
-    Schreibt die gefilterten Daten in die im OUTPUT_PFAD definierte CSV-Datei.
+    Schreibt die gefilterten Daten in eine CSV-Datei mit Zeitstempel im Namen.
     """
     if not daten:
         print("Keine Daten zum Schreiben vorhanden.")
         return
 
+    # Zeitstempel generieren: YYMMDD HHmm
+    zeitstempel = datetime.now().strftime("%y%m%d %H%M")
+    dateiname = f"{zeitstempel}_{BASIS_DATEINAME}"
+    ausgabe_pfad = os.path.join(OUTPUT_ORDNER, dateiname)
+
     # Sicherstellen, dass das Ausgabeverzeichnis existiert
-    os.makedirs(os.path.dirname(OUTPUT_PFAD), exist_ok=True)
+    os.makedirs(OUTPUT_ORDNER, exist_ok=True)
 
     feldern = ['Name', 'ID', 'barcode', 'extnr', 'ändern_auf']
     try:
-        with open(OUTPUT_PFAD, mode='w', encoding='utf-8', newline='') as csvdatei:
+        with open(ausgabe_pfad, mode='w', encoding='utf-8', newline='') as csvdatei:
             writer = csv.DictWriter(csvdatei, fieldnames=feldern, delimiter=';')
             writer.writeheader()
             writer.writerows(daten)
-        print(f"Ergebnis erfolgreich in {OUTPUT_PFAD} geschrieben.")
+        print(f"Ergebnis erfolgreich in {ausgabe_pfad} geschrieben.")
     except Exception as e:
         print(f"Fehler beim Schreiben der Ergebnis-CSV: {e}")
 
