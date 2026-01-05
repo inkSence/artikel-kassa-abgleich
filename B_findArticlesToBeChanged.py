@@ -3,14 +3,14 @@ import csv
 import os
 import glob
 
-# Liste der IDs, die nicht durchsucht werden müssen
-AUSSCHLUSS_IDS = ['40', '41', '42', '43']
-
-def filtere_artikel(daten):
+def filtere_artikel(daten, ausschluss_ids=None):
     """
     Filtert die Artikel basierend auf Lagerstand und Kassaartikel-Status.
     Gibt eine Liste von Dictionaries mit den gewünschten Spalten zurück.
     """
+    if ausschluss_ids is None:
+        ausschluss_ids = []
+        
     ergebnisse = []
     
     for zeile in daten:
@@ -18,7 +18,7 @@ def filtere_artikel(daten):
             artikel_id = zeile.get('ID', '')
             
             # Prüfen, ob die ID auf der Ausschlussliste steht
-            if artikel_id in AUSSCHLUSS_IDS:
+            if artikel_id in ausschluss_ids:
                 continue
                 
             # Lagerstand konvertieren (Komma zu Punkt für float)
@@ -51,25 +51,36 @@ def filtere_artikel(daten):
             
     return ergebnisse
 
-if __name__ == "__main__":
+def haupt_prozess():
+    """
+    Führt den gesamten Prozess der Artikelfilterung aus:
+    Datei suchen, einlesen, filtern und Ergebnis schreiben.
+    """
     # Suche nach der aktuellsten CSV-Datei im data Ordner
     csv_dateien = glob.glob("data/*.csv")
     if not csv_dateien:
         print("Keine CSV-Dateien im Ordner 'data/' gefunden.")
-    else:
-        # Sortieren, um die neueste Datei zu bekommen (basierend auf dem Zeitstempel im Namen)
-        neueste_datei = sorted(csv_dateien)[-1]
-        print(f"Verarbeite Datei: {neueste_datei}")
-        
-        artikel_daten = A_FileSystem.lese_csv_tabelle(neueste_datei)
-        gefilterte_artikel = filtere_artikel(artikel_daten)
-        
-        # Konfiguration laden und ggf. weiter filtern
-        config = A_FileSystem.lese_konfiguration()
-        if config.get("nur_ja_ausgeben"):
-            print("Filter aktiv: Nur Artikel mit 'ändern_auf: Ja' werden ausgegeben.")
-            gefilterte_artikel = [a for a in gefilterte_artikel if a['ändern_auf'] == 'Ja']
-        
-        print(f"{len(gefilterte_artikel)} Artikel gefunden, die ausgegeben werden.")
-        
-        A_FileSystem.schreibe_ergebnis_csv(gefilterte_artikel)
+        return
+    
+    # Sortieren, um die neueste Datei zu bekommen (basierend auf dem Zeitstempel im Namen)
+    neueste_datei = sorted(csv_dateien)[-1]
+    print(f"Verarbeite Datei: {neueste_datei}")
+    
+    # Konfiguration laden
+    config = A_FileSystem.lese_konfiguration()
+    ausschluss_ids = config.get("ausschluss_ids", [])
+    
+    artikel_daten = A_FileSystem.lese_csv_tabelle(neueste_datei)
+    gefilterte_artikel = filtere_artikel(artikel_daten, ausschluss_ids)
+    
+    # Ggf. weiter filtern basierend auf Konfiguration
+    if config.get("nur_ja_ausgeben"):
+        print("Filter aktiv: Nur Artikel mit 'ändern_auf: Ja' werden ausgegeben.")
+        gefilterte_artikel = [a for a in gefilterte_artikel if a['ändern_auf'] == 'Ja']
+    
+    print(f"{len(gefilterte_artikel)} Artikel gefunden, die ausgegeben werden.")
+    
+    A_FileSystem.schreibe_ergebnis_csv(gefilterte_artikel)
+
+if __name__ == "__main__":
+    haupt_prozess()

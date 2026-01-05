@@ -1,3 +1,4 @@
 {
-    "nur_ja_ausgeben": false
+    "nur_ja_ausgeben": 0,
+    "ausschluss_ids": ["40", "41", "42", "43"]
 }

@@ -12,7 +12,10 @@ def lese_konfiguration():
     Liest die Konfigurationsdatei ein.
     Gibt ein Dictionary mit den Einstellungen zurück.
     """
-    standard_config = {"nur_ja_ausgeben": False}
+    standard_config = {
+        "nur_ja_ausgeben": 0,
+        "ausschluss_ids": []
+    }
     if not os.path.exists(CONFIG_DATEI):
         return standard_config
     
