@@ -26,7 +26,7 @@ def main():
     ausschluss_ids = config.get("ausschluss_ids", [])
 
     artikel_daten = A_FileSystem.lese_csv_tabelle(neueste_datei)
-    gefilterte_artikel = B_findArticlesToBeChanged.filtere_artikel(artikel_daten, ausschluss_ids)
+    gefilterte_artikel = B_findArticlesToBeChanged.filtere_artikel_nach_inkassa_und_lagerstand(artikel_daten, ausschluss_ids)
 
     # Ggf. weiter filtern basierend auf Konfiguration
     if config.get("nur_ja_ausgeben"):

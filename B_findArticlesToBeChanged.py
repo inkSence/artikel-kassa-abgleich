@@ -1,12 +1,15 @@
 
 
-def filtere_artikel(daten, ausschluss_ids=None):
+def filtere_artikel_nach_inkassa_und_lagerstand(daten, ausschluss_ids=None):
     """
     Filtert die Artikel basierend auf Lagerstand und Kassaartikel-Status.
     Gibt eine Liste von Dictionaries mit den gewünschten Spalten zurück.
     """
     if ausschluss_ids is None:
         ausschluss_ids = []
+    else:
+        # Sicherstellen, dass alle IDs als Strings verglichen werden
+        ausschluss_ids = [str(aid) for aid in ausschluss_ids]
         
     ergebnisse = []
     
