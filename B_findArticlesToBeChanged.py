@@ -1,6 +1,8 @@
 
 
-def filtere_artikel_nach_inkassa_und_lagerstand(daten, ausschluss_ids=None):
+from typing import List, Dict, Any, Optional
+
+def filtere_artikel_nach_inkassa_und_lagerstand(daten: List[Dict[str, str]], ausschluss_ids: Optional[List[Any]] = None) -> List[Dict[str, str]]:
     """
     Filtert die Artikel basierend auf Lagerstand und Kassaartikel-Status.
     Gibt eine Liste von Dictionaries mit den gewünschten Spalten zurück.
@@ -11,7 +13,7 @@ def filtere_artikel_nach_inkassa_und_lagerstand(daten, ausschluss_ids=None):
         # Sicherstellen, dass alle IDs als Strings verglichen werden
         ausschluss_ids = [str(aid) for aid in ausschluss_ids]
         
-    ergebnisse = []
+    ergebnisse: List[Dict[str, str]] = []
     
     for zeile in daten:
         try:
@@ -20,9 +22,14 @@ def filtere_artikel_nach_inkassa_und_lagerstand(daten, ausschluss_ids=None):
             # Prüfen, ob die ID auf der Ausschlussliste steht
             if artikel_id in ausschluss_ids:
                 continue
-                
+            
             # Lagerstand konvertieren (Komma zu Punkt für float)
-            lagerstand_str = zeile.get('lagerstand', '0').replace(',', '.')
+            lagerstand_val = zeile.get('lagerstand', '0')
+            if isinstance(lagerstand_val, str):
+                lagerstand_str = lagerstand_val.replace(',', '.')
+            else:
+                lagerstand_str = str(lagerstand_val)
+                
             lagerstand = float(lagerstand_str)
             
             kassaartikel = zeile.get('kassaartikel', '0')
@@ -50,4 +57,14 @@ def filtere_artikel_nach_inkassa_und_lagerstand(daten, ausschluss_ids=None):
             print(f"Warnung: Konnte Lagerstand für Artikel ID {zeile.get('ID')} nicht lesen: {zeile.get('lagerstand')}")
             
     return ergebnisse
+
+if __name__ == "__main__":
+    # Ermöglicht das Testen des Moduls
+    print("B_findArticlesToBeChanged: Modul-Test")
+    test_daten = [
+        {'name': 'Test1', 'ID': '1', 'lagerstand': '5,0', 'kassaartikel': '0'},
+        {'name': 'Test2', 'ID': '2', 'lagerstand': '0,0', 'kassaartikel': '1'}
+    ]
+    ergebnis = filtere_artikel_nach_inkassa_und_lagerstand(test_daten)
+    print(f"Testergebnis: {ergebnis}")
 

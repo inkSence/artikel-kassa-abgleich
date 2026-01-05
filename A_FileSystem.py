@@ -3,16 +3,18 @@ import os
 import json
 from datetime import datetime
 
+from typing import List, Dict, Any, Optional
+
 OUTPUT_ORDNER = "output"
 BASIS_DATEINAME = "artikel_vorschlaege.csv"
 CONFIG_DATEI = "config.json"
 
-def lese_konfiguration():
+def lese_konfiguration() -> Dict[str, Any]:
     """
     Liest die Konfigurationsdatei ein.
     Gibt ein Dictionary mit den Einstellungen zurück.
     """
-    standard_config = {
+    standard_config: Dict[str, Any] = {
         "nur_ja_ausgeben": 0,
         "ausschluss_ids": []
     }
@@ -26,11 +28,11 @@ def lese_konfiguration():
         print(f"Fehler beim Lesen der Konfiguration: {e}")
         return standard_config
 
-def lese_csv_tabelle(dateipfad):
+def lese_csv_tabelle(dateipfad: str) -> List[Dict[str, str]]:
     """
     Liest eine CSV-Datei mit Semikolon-Trennung ein und gibt sie als Liste von Dictionaries zurück.
     """
-    daten = []
+    daten: List[Dict[str, str]] = []
     if not os.path.exists(dateipfad):
         print(f"Datei nicht gefunden: {dateipfad}")
         return daten
@@ -45,7 +47,7 @@ def lese_csv_tabelle(dateipfad):
     
     return daten
 
-def schreibe_text_datei(dateipfad, inhalt):
+def schreibe_text_datei(dateipfad: str, inhalt: str) -> None:
     """
     Schreibt einen Text-Inhalt in eine Datei.
     """
@@ -55,7 +57,7 @@ def schreibe_text_datei(dateipfad, inhalt):
     except Exception as e:
         print(f"Fehler beim Schreiben der Datei: {e}")
 
-def schreibe_ergebnis_csv(daten):
+def schreibe_ergebnis_csv(daten: List[Dict[str, Any]]) -> None:
     """
     Schreibt die gefilterten Daten in eine CSV-Datei mit Zeitstempel im Namen.
     """

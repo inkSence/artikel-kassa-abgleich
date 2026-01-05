@@ -2,7 +2,7 @@ import A_FileSystem
 import B_findArticlesToBeChanged
 import glob
 
-def main():
+def main() -> None:
 
     print("=== Supermarkt Artikelbestand - Kassenabgleich ===")
 
