@@ -16,7 +16,8 @@ def lese_konfiguration() -> Dict[str, Any]:
     """
     standard_config: Dict[str, Any] = {
         "nur_ja_ausgeben": 0,
-        "ausschluss_ids": []
+        "ausschluss_ids": [],
+        "stückartikel_nicht_ausgeben": 0
     }
     if not os.path.exists(CONFIG_DATEI):
         return standard_config
@@ -57,9 +58,10 @@ def schreibe_text_datei(dateipfad: str, inhalt: str) -> None:
     except Exception as e:
         print(f"Fehler beim Schreiben der Datei: {e}")
 
-def schreibe_ergebnis_csv(daten: List[Dict[str, Any]]) -> None:
+def schreibe_ergebnis_csv(daten: List[Dict[str, Any]], felder: Optional[List[str]] = None) -> None:
     """
     Schreibt die gefilterten Daten in eine CSV-Datei mit Zeitstempel im Namen.
+    Wurden keine Felder übergeben, werden die Keys des ersten Datensatzes verwendet.
     """
     if not daten:
         print("Keine Daten zum Schreiben vorhanden.")
@@ -73,10 +75,12 @@ def schreibe_ergebnis_csv(daten: List[Dict[str, Any]]) -> None:
     # Sicherstellen, dass das Ausgabeverzeichnis existiert
     os.makedirs(OUTPUT_ORDNER, exist_ok=True)
 
-    feldern = ['Name', 'ID', 'barcode', 'extnr', 'ändern_auf']
+    if felder is None:
+        felder = list(daten[0].keys())
+
     try:
         with open(ausgabe_pfad, mode='w', encoding='utf-8', newline='') as csvdatei:
-            writer = csv.DictWriter(csvdatei, fieldnames=feldern, delimiter=';')
+            writer = csv.DictWriter(csvdatei, fieldnames=felder, delimiter=';')
             writer.writeheader()
             writer.writerows(daten)
         print(f"Ergebnis erfolgreich in {ausgabe_pfad} geschrieben.")

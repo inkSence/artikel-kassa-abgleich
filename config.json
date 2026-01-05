@@ -1,4 +1,5 @@
 {
     "nur_ja_ausgeben": 0,
-    "ausschluss_ids": [40, 41, 42, 43, 1182]
+    "ausschluss_ids": [40, 41, 42, 43, 1182],
+    "stückartikel_nicht_ausgeben": 0
 }

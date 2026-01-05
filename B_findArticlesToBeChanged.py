@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 def filtere_artikel_nach_inkassa_und_lagerstand(daten: List[Dict[str, str]], ausschluss_ids: Optional[List[Any]] = None) -> List[Dict[str, str]]:
     """
     Filtert die Artikel basierend auf Lagerstand und Kassaartikel-Status.
-    Gibt eine Liste von Dictionaries mit den gewünschten Spalten zurück.
+    Gibt eine Liste von Dictionaries zurück, wobei jeder gefundene Artikel um das Feld 'ändern_auf' erweitert wurde.
     """
     if ausschluss_ids is None:
         ausschluss_ids = []
@@ -46,17 +46,23 @@ def filtere_artikel_nach_inkassa_und_lagerstand(daten: List[Dict[str, str]], aus
                 andern_auf = 'Nein'
                 
             if andern_auf:
-                ergebnisse.append({
-                    'Name': zeile.get('name', ''),
-                    'ID': zeile.get('ID', ''),
-                    'barcode': zeile.get('barcode', ''),
-                    'extnr': zeile.get('extnr', ''),
-                    'ändern_auf': andern_auf
-                })
+                # Kopie erstellen und markieren
+                artikel_treffer = zeile.copy()
+                artikel_treffer['ändern_auf'] = andern_auf
+                ergebnisse.append(artikel_treffer)
         except ValueError:
             print(f"Warnung: Konnte Lagerstand für Artikel ID {zeile.get('ID')} nicht lesen: {zeile.get('lagerstand')}")
             
     return ergebnisse
+
+def filtere_nach_stueckartikel(daten: List[Dict[str, str]], aktiv: bool = False) -> List[Dict[str, str]]:
+    """
+    Filtert Artikel heraus, deren grundeinheit 'Stück' ist, falls aktiv True ist.
+    """
+    if not aktiv:
+        return daten
+    
+    return [a for a in daten if a.get('grundeinheit') != 'Stück']
 
 if __name__ == "__main__":
     # Ermöglicht das Testen des Moduls
