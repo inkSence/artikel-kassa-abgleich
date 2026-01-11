@@ -1,65 +1,31 @@
-import A_FileSystem
-import B_findArticlesToBeChanged
-import glob
+from C_adapters.cli_controller import CLIController
+from C_adapters import artikel_repository
+from A_domain.models import AppMode
 
 def main() -> None:
-
-    print("=== Supermarkt Artikelbestand - Kassenabgleich ===")
-
-
     """
-    Führt den gesamten Prozess der Artikelfilterung aus:
-    Datei suchen, einlesen, filtern und Ergebnis schreiben.
+    Einstiegspunkt der Anwendung (Composition Root).
+    Hier wird entschieden, welcher Controller (CLI, Web, etc.) gestartet wird.
     """
-    # Suche nach der aktuellsten CSV-Datei im data Ordner
-    csv_dateien = glob.glob("data/*.csv")
-    if not csv_dateien:
-        print("Keine CSV-Dateien im Ordner 'data/' gefunden.")
+    config = artikel_repository.lade_konfiguration()
+    mode_str = config.get("mode", "local")
+    
+    try:
+        # Hier nutzen wir das Enum, um sicherzustellen, dass nur erlaubte Werte verarbeitet werden
+        mode = AppMode(mode_str)
+    except ValueError:
+        print(f"Fehler: Ungueltiger Modus '{mode_str}' in der Konfiguration.")
+        print(f"Erlaubte Werte sind: {[m.value for m in AppMode]}")
         return
 
-    # Sortieren, um die neueste Datei zu bekommen (basierend auf dem Zeitstempel im Namen)
-    neueste_datei = sorted(csv_dateien)[-1]
-    print(f"Verarbeite Datei: {neueste_datei}")
-
-    # Konfiguration laden
-    config = A_FileSystem.lese_konfiguration()
-    ausschluss_ids = config.get("ausschluss_ids", [])
-    stueck_filter_aktiv = bool(config.get("stückartikel_nicht_ausgeben", 0))
-
-    artikel_daten = A_FileSystem.lese_csv_tabelle(neueste_datei)
-    
-    # 1. Schritt: Nach Kassa-Status und Lagerstand filtern
-    treffer_artikel = B_findArticlesToBeChanged.filtere_artikel_nach_inkassa_und_lagerstand(artikel_daten, ausschluss_ids)
-    
-    # 2. Schritt: Optional Stückartikel ausfiltern
-    anzahl_vor_stueck_filter = len(treffer_artikel)
-    treffer_artikel = B_findArticlesToBeChanged.filtere_nach_stueckartikel(treffer_artikel, stueck_filter_aktiv)
-    
-    if stueck_filter_aktiv and len(treffer_artikel) < anzahl_vor_stueck_filter:
-        print(f"Filter aktiv: {anzahl_vor_stueck_filter - len(treffer_artikel)} Stückartikel wurden entfernt.")
-
-    # Ggf. weiter filtern basierend auf Konfiguration
-    if config.get("nur_ja_ausgeben"):
-        print("Filter aktiv: Nur Artikel mit 'ändern_auf: Ja' werden ausgegeben.")
-        treffer_artikel = [a for a in treffer_artikel if a['ändern_auf'] == 'Ja']
-
-    # Definition des Datenmodells für die Ausgabe
-    ausgabe_daten = []
-    ausgabe_felder = ['Name', 'ID', 'barcode', 'extnr', 'ändern_auf']
-    
-    for a in treffer_artikel:
-        ausgabe_daten.append({
-            'Name': a.get('name', ''),
-            'ID': a.get('ID', ''),
-            'barcode': a.get('barcode', ''),
-            'extnr': a.get('extnr', ''),
-            'ändern_auf': a.get('ändern_auf')
-        })
-
-    print(f"{len(ausgabe_daten)} Artikel gefunden, die ausgegeben werden.")
-
-    A_FileSystem.schreibe_ergebnis_csv(ausgabe_daten, ausgabe_felder)
-    print("==================================================")
+    if mode == AppMode.LOCAL:
+        controller = CLIController()
+        controller.execute()
+    elif mode == AppMode.WEB:
+        # Platzhalter fuer die zukuenftige Web-Erweiterung
+        print("Der Web-Modus wurde in der Konfiguration gewaehlt, ist aber noch nicht implementiert.")
+    else:
+        print(f"Der Modus {mode} wird aktuell nicht unterstuetzt.")
 
 if __name__ == "__main__":
     main()

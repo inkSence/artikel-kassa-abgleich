@@ -1,5 +1,6 @@
 {
+    "mode": "local",
     "nur_ja_ausgeben": 0,
-    "ausschluss_ids": [40, 41, 42, 43, 1182],
-    "stückartikel_nicht_ausgeben": 1
+    "ausschluss_ids": [22, 23, 40, 41, 42, 43, 1181, 1182],
+    "stückartikel_nicht_ausgeben": 0
 }
