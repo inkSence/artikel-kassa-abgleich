@@ -4,10 +4,20 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 import io
 import os
+import logging
 from C_adapters import artikel_repository
 from B_application.use_cases import ArtikelSyncUseCase
 
+# Logging konfigurieren
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="Artikel Kassenabgleich API")
+
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 # Pfade für Templates und Statische Dateien konfigurieren
 basis_pfad = os.path.dirname(os.path.dirname(__file__))
@@ -32,11 +42,20 @@ async def process_csv_api(
     stueck_aus: bool = Form(False)
 ):
     """Endpunkt zum Verarbeiten einer CSV, gibt JSON für die UI zurück."""
-    if not file.filename.endswith('.csv'):
+    if not file.filename.lower().endswith('.csv'):
         raise HTTPException(status_code=400, detail="Nur CSV-Dateien sind erlaubt.")
+
+    # Prüfung der Dateigröße
+    if file.size and file.size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="Datei ist zu groß. Maximal 5 MB erlaubt.")
 
     try:
         inhalt = await file.read()
+        
+        # Sicherheitscheck: Falls file.size None war, hier nach dem Lesen prüfen
+        if len(inhalt) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=413, detail="Datei ist zu groß. Maximal 5 MB erlaubt.")
+            
         inhalt_str = inhalt.decode("utf-8-sig")
         
         # Basis-Konfiguration laden und mit Web-Eingaben überschreiben
@@ -52,20 +71,35 @@ async def process_csv_api(
         use_case = ArtikelSyncUseCase(config)
         ergebnisse = use_case.execute(artikel_objekte)
         
-        return {"filename": file.filename, "results": ergebnisse}
+        # Dateiname für die UI säubern
+        safe_filename = os.path.basename(file.filename)
+        
+        return {"filename": safe_filename, "results": ergebnisse}
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Fehler in process_csv_api: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Bei der Verarbeitung der Daten ist ein interner Fehler aufgetreten.")
 
 @app.post("/upload")
 async def upload_csv(file: UploadFile = File(...)):
     """Endpunkt zum Hochladen einer CSV und Erhalten der Ergebnisse."""
-    if not file.filename.endswith('.csv'):
+    if not file.filename.lower().endswith('.csv'):
         raise HTTPException(status_code=400, detail="Nur CSV-Dateien sind erlaubt.")
+
+    # Prüfung der Dateigröße
+    if file.size and file.size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="Datei ist zu groß. Maximal 5 MB erlaubt.")
 
     try:
         # 1. Datei einlesen
         inhalt = await file.read()
+        
+        # Sicherheitscheck: Falls file.size None war, hier nach dem Lesen prüfen
+        if len(inhalt) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=413, detail="Datei ist zu groß. Maximal 5 MB erlaubt.")
+            
         inhalt_str = inhalt.decode("utf-8-sig") # utf-8-sig für BOM Handling
 
         # 2. Konfiguration laden
@@ -86,7 +120,8 @@ async def upload_csv(file: UploadFile = File(...)):
         csv_export = artikel_repository.erzeuge_export_string(ergebnisse, ausgabe_felder)
 
         # Dateiname für den Download vorbereiten (Postfix aus Config vor der Endung)
-        original_name = os.path.splitext(file.filename)[0]
+        safe_filename = os.path.basename(file.filename)
+        original_name = os.path.splitext(safe_filename)[0]
         postfix = config.get("postfix_outputdatei_web", "vorschlaege_IN_KASSA")
         download_filename = f"{original_name}{postfix}.csv"
 
@@ -98,10 +133,13 @@ async def upload_csv(file: UploadFile = File(...)):
             headers={"Content-Disposition": f"attachment; filename={download_filename}"}
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Interner Fehler: {str(e)}")
+        logger.error(f"Fehler in upload_csv: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Bei der Verarbeitung der Datei ist ein interner Fehler aufgetreten.")
 
 def run():
     """Startet den Webserver."""
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)

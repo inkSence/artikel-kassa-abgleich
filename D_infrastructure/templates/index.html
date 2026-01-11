@@ -153,12 +153,25 @@
             resultBody.innerHTML = '';
             results.forEach(row => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.Name}</td>
-                    <td>${row.ID}</td>
-                    <td>${row.barcode}</td>
-                    <td><strong>${row.ändern_auf}</strong></td>
-                `;
+                
+                const tdName = document.createElement('td');
+                tdName.textContent = row.Name || '';
+                tr.appendChild(tdName);
+
+                const tdID = document.createElement('td');
+                tdID.textContent = row.ID || '';
+                tr.appendChild(tdID);
+
+                const tdBarcode = document.createElement('td');
+                tdBarcode.textContent = row.barcode || '';
+                tr.appendChild(tdBarcode);
+
+                const tdStatus = document.createElement('td');
+                const strong = document.createElement('strong');
+                strong.textContent = row.ändern_auf || '';
+                tdStatus.appendChild(strong);
+                tr.appendChild(tdStatus);
+
                 resultBody.appendChild(tr);
             });
             resultArea.classList.remove('hidden');

@@ -2,8 +2,11 @@ import csv
 import io
 import os
 import json
+import logging
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+
+logger = logging.getLogger(__name__)
 
 def lese_json(dateipfad: str) -> Dict[str, Any]:
     """Liest eine JSON-Datei ein."""
@@ -13,7 +16,7 @@ def lese_json(dateipfad: str) -> Dict[str, Any]:
         with open(dateipfad, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
-        print(f"Fehler beim Lesen der JSON-Datei {dateipfad}: {e}")
+        logger.error(f"Fehler beim Lesen der JSON-Datei {dateipfad}: {e}")
         return {}
 
 def lese_csv(dateipfad: str, delimiter: str = ';') -> List[Dict[str, str]]:
@@ -27,7 +30,7 @@ def lese_csv(dateipfad: str, delimiter: str = ';') -> List[Dict[str, str]]:
             for zeile in reader:
                 daten.append(zeile)
     except Exception as e:
-        print(f"Fehler beim Lesen der CSV-Datei {dateipfad}: {e}")
+        logger.error(f"Fehler beim Lesen der CSV-Datei {dateipfad}: {e}")
     return daten
 
 def parse_csv_string(inhalt: str, delimiter: str = ';') -> List[Dict[str, str]]:
@@ -39,7 +42,7 @@ def parse_csv_string(inhalt: str, delimiter: str = ';') -> List[Dict[str, str]]:
         for zeile in reader:
             daten.append(zeile)
     except Exception as e:
-        print(f"Fehler beim Parsen des CSV-Strings: {e}")
+        logger.error(f"Fehler beim Parsen des CSV-Strings: {e}")
     return daten
 
 def schreibe_csv(dateipfad: str, daten: List[Dict[str, Any]], felder: List[str], delimiter: str = ';') -> None:
@@ -51,7 +54,7 @@ def schreibe_csv(dateipfad: str, daten: List[Dict[str, Any]], felder: List[str],
             writer.writeheader()
             writer.writerows(daten)
     except Exception as e:
-        print(f"Fehler beim Schreiben der CSV-Datei {dateipfad}: {e}")
+        logger.error(f"Fehler beim Schreiben der CSV-Datei {dateipfad}: {e}")
 
 def generiere_csv_string(daten: List[Dict[str, Any]], felder: List[str], delimiter: str = ';') -> str:
     """Generiert einen CSV-String aus Daten."""
@@ -61,7 +64,7 @@ def generiere_csv_string(daten: List[Dict[str, Any]], felder: List[str], delimit
         writer.writeheader()
         writer.writerows(daten)
     except Exception as e:
-        print(f"Fehler beim Generieren des CSV-Strings: {e}")
+        logger.error(f"Fehler beim Generieren des CSV-Strings: {e}")
     return output.getvalue()
 
 def schreibe_text(dateipfad: str, inhalt: str) -> None:
@@ -71,4 +74,4 @@ def schreibe_text(dateipfad: str, inhalt: str) -> None:
         with open(dateipfad, mode='w', encoding='utf-8') as datei:
             datei.write(inhalt)
     except Exception as e:
-        print(f"Fehler beim Schreiben der Datei {dateipfad}: {e}")
+        logger.error(f"Fehler beim Schreiben der Datei {dateipfad}: {e}")
