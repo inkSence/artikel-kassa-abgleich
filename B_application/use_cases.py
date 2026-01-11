@@ -15,8 +15,8 @@ class ArtikelSyncUseCase:
         self.config = config
         # Vorbereiten der Filter-Einstellungen aus der Config
         self.ausschluss_ids = [str(aid) for aid in config.get("ausschluss_ids", [])]
-        self.stueck_filter_aktiv = bool(config.get("stückartikel_nicht_ausgeben", 0))
-        self.nur_ja_ausgeben = bool(config.get("nur_ja_ausgeben", 0))
+        self.stueck_filter_aktiv = bool(config.get("stueckartikel_aussortieren", 0))
+        self.nur_aenderungen_zu_JA_ausgeben = bool(config.get("nur_änderungen_zu_JA_ausgeben", 0))
 
     def execute(self, artikel_liste: List[Artikel]) -> List[Dict[str, Any]]:
         """
@@ -43,7 +43,7 @@ class ArtikelSyncUseCase:
                 continue
             
             # 4. Filter nach 'Nur Ja' (falls konfiguriert)
-            if self.nur_ja_ausgeben and soll_status != 'Ja':
+            if self.nur_aenderungen_zu_JA_ausgeben and soll_status != 'Ja':
                 continue
             
             # Mapping der Ergebnisse für die Präsentationsschicht

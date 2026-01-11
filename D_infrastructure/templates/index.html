@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artikel Kassenabgleich</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Artikel Kassenabgleich</h1>
+        <p>Hier kommt die CSV-Datei hinein, die als Export von LotzApp entsteht.</p>
+        <p>Als Ergebnis werden die notwendigen Änderungen für die Kasse ermittelt.</p>
+        
+        <form id="upload-form" enctype="multipart/form-data">
+            <div id="drop-zone">
+                <p>📁 Datei hierher ziehen oder klicken zum Auswählen</p>
+                <p style="font-size: 0.8em; color: #666; margin-top: 5px;">(Verarbeitung startet automatisch nach dem Abwurf)</p>
+                <div id="file-info"></div>
+                <input name="file" id="file" type="file" accept=".csv" required>
+            </div>
+            <div id="loading" class="hidden">Verarbeite Daten...</div>
+        </form>
+
+        <div id="result-area" class="result-container hidden">
+            <h2>Vorschau der Änderungen</h2>
+            <input type="button" id="download-btn" value="Tabelle runterladen (.csv)" class="submit-btn">
+            <table class="result-table" id="result-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>ID</th>
+                        <th>Barcode</th>
+                        <th>Ändern auf</th>
+                    </tr>
+                </thead>
+                <tbody id="result-body"></tbody>
+            </table>
+            <p><a href="/" style="color: #007bff;">Erneut verarbeiten</a></p>
+        </div>
+
+        <div class="config-box">
+            <div class="config-title">Aktive Konfiguration:</div>
+            {% for key, value in config.items() %}
+            <div class="config-item">
+                <span>{{ key }}:</span>
+                <span>{{ value }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file');
+        const fileInfo = document.getElementById('file-info');
+        const form = document.getElementById('upload-form');
+        const resultArea = document.getElementById('result-area');
+        const resultBody = document.getElementById('result-body');
+        const downloadBtn = document.getElementById('download-btn');
+        const loading = document.getElementById('loading');
+
+        // Konfiguration aus dem Backend
+        const configPostfix = "{{ config.get('postfix_outputdatei_web', 'vorschlaege_IN_KASSA') }}";
+
+        let currentResults = [];
+        let currentFilename = "";
+
+        // Klick auf die Zone öffnet den Datei-Dialog
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        // Visuelles Feedback beim Drüberziehen
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            }, false);
+        });
+
+        // Datei-Abwurf verarbeiten
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleUpload(files[0]);
+            }
+        });
+
+        // Änderung am versteckten Input
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                handleUpload(fileInput.files[0]);
+            }
+        });
+
+        async function handleUpload(file) {
+            updateFileInfo(file);
+            loading.classList.remove('hidden');
+            dropZone.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error('Fehler beim Verarbeiten');
+                
+                const data = await response.json();
+                currentResults = data.results;
+                currentFilename = data.filename;
+                
+                displayResults(currentResults);
+            } catch (error) {
+                alert(error.message);
+                dropZone.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function displayResults(results) {
+            resultBody.innerHTML = '';
+            results.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.Name}</td>
+                    <td>${row.ID}</td>
+                    <td>${row.barcode}</td>
+                    <td><strong>${row.ändern_auf}</strong></td>
+                `;
+                resultBody.appendChild(tr);
+            });
+            resultArea.classList.remove('hidden');
+        }
+
+        function updateFileInfo(file) {
+            fileInfo.textContent = `Verarbeite: ${file.name}`;
+            fileInfo.style.display = 'block';
+        }
+
+        // CSV Download Logik
+        downloadBtn.addEventListener('click', () => {
+            if (currentResults.length === 0) return;
+            
+            // CSV Header und Daten bauen
+            const headers = ['Name', 'ID', 'barcode', 'extnr', 'ändern_auf', 'einheit'];
+            const csvRows = [headers.join(';')];
+            
+            currentResults.forEach(res => {
+                const row = headers.map(h => res[h] || '');
+                csvRows.push(row.join(';'));
+            });
+            
+            const csvContent = "\ufeff" + csvRows.join('\n'); // mit BOM
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            // Dateiname bauen: Originalname + Postfix aus Config
+            const dotIndex = currentFilename.lastIndexOf('.');
+            const baseName = dotIndex !== -1 ? currentFilename.substring(0, dotIndex) : currentFilename;
+            const downloadFilename = `${baseName}${configPostfix}.csv`;
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", downloadFilename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+
+    <div class="footer">
+        <p>Schreibt mir eine E-Mail, wenn es Fragen gibt oder etwas nicht richtig funktioniert: post[at]philipplack.de</p>
+    </div>
+</body>
+</html>

@@ -22,8 +22,9 @@ def main() -> None:
         controller = CLIController()
         controller.execute()
     elif mode == AppMode.WEB:
-        # Platzhalter fuer die zukuenftige Web-Erweiterung
-        print("Der Web-Modus wurde in der Konfiguration gewaehlt, ist aber noch nicht implementiert.")
+        from C_adapters.web_controller import run
+        print("Starte Web-Modus auf Port 8000...")
+        run()
     else:
         print(f"Der Modus {mode} wird aktuell nicht unterstuetzt.")
 

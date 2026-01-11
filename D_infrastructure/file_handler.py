@@ -1,4 +1,5 @@
 import csv
+import io
 import os
 import json
 from datetime import datetime
@@ -29,6 +30,18 @@ def lese_csv(dateipfad: str, delimiter: str = ';') -> List[Dict[str, str]]:
         print(f"Fehler beim Lesen der CSV-Datei {dateipfad}: {e}")
     return daten
 
+def parse_csv_string(inhalt: str, delimiter: str = ';') -> List[Dict[str, str]]:
+    """Parst einen CSV-String in eine Liste von Dictionaries."""
+    daten: List[Dict[str, str]] = []
+    try:
+        # splitlines() behandelt verschiedene Zeilenenden korrekt
+        reader = csv.DictReader(inhalt.splitlines(), delimiter=delimiter)
+        for zeile in reader:
+            daten.append(zeile)
+    except Exception as e:
+        print(f"Fehler beim Parsen des CSV-Strings: {e}")
+    return daten
+
 def schreibe_csv(dateipfad: str, daten: List[Dict[str, Any]], felder: List[str], delimiter: str = ';') -> None:
     """Schreibt Daten in eine CSV-Datei."""
     os.makedirs(os.path.dirname(dateipfad), exist_ok=True)
@@ -39,6 +52,17 @@ def schreibe_csv(dateipfad: str, daten: List[Dict[str, Any]], felder: List[str],
             writer.writerows(daten)
     except Exception as e:
         print(f"Fehler beim Schreiben der CSV-Datei {dateipfad}: {e}")
+
+def generiere_csv_string(daten: List[Dict[str, Any]], felder: List[str], delimiter: str = ';') -> str:
+    """Generiert einen CSV-String aus Daten."""
+    output = io.StringIO()
+    try:
+        writer = csv.DictWriter(output, fieldnames=felder, delimiter=delimiter)
+        writer.writeheader()
+        writer.writerows(daten)
+    except Exception as e:
+        print(f"Fehler beim Generieren des CSV-Strings: {e}")
+    return output.getvalue()
 
 def schreibe_text(dateipfad: str, inhalt: str) -> None:
     """Schreibt Text in eine Datei."""
