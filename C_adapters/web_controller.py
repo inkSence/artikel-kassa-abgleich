@@ -15,7 +15,22 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Artikel Kassenabgleich API")
+app = FastAPI(
+    title="Artikel Kassenabgleich API",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None
+)
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Fügt grundlegende Sicherheits-Header zu jeder Response hinzu."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
@@ -33,7 +48,12 @@ templates = Jinja2Templates(directory=template_pfad)
 async def index(request: Request):
     """Zeigt die Startseite mit Upload-Formular via Jinja2 Template."""
     config = artikel_repository.lade_konfiguration()
-    return templates.TemplateResponse("index.html", {"request": request, "config": config})
+    # Nur anzeigen, wenn ?debug=1 in der URL steht
+    show_config = request.query_params.get("debug") == "1"
+    return templates.TemplateResponse(
+        "index.html", 
+        {"request": request, "config": config, "show_config": show_config}
+    )
 
 @app.post("/api/process")
 async def process_csv_api(

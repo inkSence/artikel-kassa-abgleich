@@ -52,7 +52,16 @@
         </div>
 
         <div class="config-box">
-            <div class="config-title">Aktive Konfiguration:</div>
+            <div class="config-title">⚙️ Konfiguration:</div>
+            <div class="config-item">
+                <span>Ignorierte Artikel-IDs:</span>
+                <span>{{ config.ausschluss_ids | join(', ') }}</span>
+            </div>
+        </div>
+
+        {% if show_config %}
+        <div class="config-box">
+            <div class="config-title">Komplette Konfiguration (Debug-Modus):</div>
             {% for key, value in config.items() %}
             <div class="config-item">
                 <span>{{ key }}:</span>
@@ -60,6 +69,7 @@
             </div>
             {% endfor %}
         </div>
+        {% endif %}
     </div>
 
     <script>

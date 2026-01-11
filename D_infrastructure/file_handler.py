@@ -45,24 +45,44 @@ def parse_csv_string(inhalt: str, delimiter: str = ';') -> List[Dict[str, str]]:
         logger.error(f"Fehler beim Parsen des CSV-Strings: {e}")
     return daten
 
+def _sanitize_fuer_csv_injection(daten: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Bereinigt Daten, um CSV-Injection (Excel Formula Injection) zu verhindern.
+    Werte, die mit gefährlichen Zeichen beginnen, werden mit einem Hochkomma (') escaped.
+    """
+    gefaehrliche_anfänge = ('=', '+', '-', '@', '\t', '\r')
+    bereinigte_daten = []
+    for zeile in daten:
+        neue_zeile = {}
+        for key, wert in zeile.items():
+            wert_str = str(wert) if wert is not None else ""
+            if wert_str.startswith(gefaehrliche_anfänge):
+                neue_zeile[key] = f"'{wert_str}"
+            else:
+                neue_zeile[key] = wert
+        bereinigte_daten.append(neue_zeile)
+    return bereinigte_daten
+
 def schreibe_csv(dateipfad: str, daten: List[Dict[str, Any]], felder: List[str], delimiter: str = ';') -> None:
     """Schreibt Daten in eine CSV-Datei."""
     os.makedirs(os.path.dirname(dateipfad), exist_ok=True)
+    bereinigte_daten = _sanitize_fuer_csv_injection(daten)
     try:
         with open(dateipfad, mode='w', encoding='utf-8', newline='') as csvdatei:
             writer = csv.DictWriter(csvdatei, fieldnames=felder, delimiter=delimiter)
             writer.writeheader()
-            writer.writerows(daten)
+            writer.writerows(bereinigte_daten)
     except Exception as e:
         logger.error(f"Fehler beim Schreiben der CSV-Datei {dateipfad}: {e}")
 
 def generiere_csv_string(daten: List[Dict[str, Any]], felder: List[str], delimiter: str = ';') -> str:
     """Generiert einen CSV-String aus Daten."""
     output = io.StringIO()
+    bereinigte_daten = _sanitize_fuer_csv_injection(daten)
     try:
         writer = csv.DictWriter(output, fieldnames=felder, delimiter=delimiter)
         writer.writeheader()
-        writer.writerows(daten)
+        writer.writerows(bereinigte_daten)
     except Exception as e:
         logger.error(f"Fehler beim Generieren des CSV-Strings: {e}")
     return output.getvalue()
