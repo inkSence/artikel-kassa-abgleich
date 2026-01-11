@@ -13,6 +13,18 @@
         <p>Als Ergebnis werden die notwendigen Änderungen für die Kasse ermittelt.</p>
         
         <form id="upload-form" enctype="multipart/form-data">
+            <div id="settings-area" class="settings-box">
+                <div class="settings-title">⚙️ Einstellungen für diesen Upload:</div>
+                <label class="setting-option">
+                    <input type="checkbox" id="check-nur-ja" {% if config.nur_Änderungen_zu_JA_ausgeben %}checked{% endif %}>
+                    Nur Änderungen zu JA ausgeben
+                </label>
+                <label class="setting-option">
+                    <input type="checkbox" id="check-stueck-aus" {% if config.stueckartikel_aussortieren %}checked{% endif %}>
+                    Stückartikel aussortieren
+                </label>
+            </div>
+
             <div id="drop-zone">
                 <p>📁 Datei hierher ziehen oder klicken zum Auswählen</p>
                 <p style="font-size: 0.8em; color: #666; margin-top: 5px;">(Verarbeitung startet automatisch nach dem Abwurf)</p>
@@ -55,6 +67,9 @@
         const fileInput = document.getElementById('file');
         const fileInfo = document.getElementById('file-info');
         const form = document.getElementById('upload-form');
+        const settingsArea = document.getElementById('settings-area');
+        const checkNurJa = document.getElementById('check-nur-ja');
+        const checkStueckAus = document.getElementById('check-stueck-aus');
         const resultArea = document.getElementById('result-area');
         const resultBody = document.getElementById('result-body');
         const downloadBtn = document.getElementById('download-btn');
@@ -105,9 +120,12 @@
             updateFileInfo(file);
             loading.classList.remove('hidden');
             dropZone.classList.add('hidden');
+            settingsArea.classList.add('hidden');
 
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('nur_ja', checkNurJa.checked);
+            formData.append('stueck_aus', checkStueckAus.checked);
 
             try {
                 const response = await fetch('/api/process', {
@@ -125,6 +143,7 @@
             } catch (error) {
                 alert(error.message);
                 dropZone.classList.remove('hidden');
+                settingsArea.classList.remove('hidden');
             } finally {
                 loading.classList.add('hidden');
             }

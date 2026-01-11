@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -26,7 +26,11 @@ async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "config": config})
 
 @app.post("/api/process")
-async def process_csv_api(file: UploadFile = File(...)):
+async def process_csv_api(
+    file: UploadFile = File(...),
+    nur_ja: bool = Form(False),
+    stueck_aus: bool = Form(False)
+):
     """Endpunkt zum Verarbeiten einer CSV, gibt JSON für die UI zurück."""
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Nur CSV-Dateien sind erlaubt.")
@@ -34,7 +38,12 @@ async def process_csv_api(file: UploadFile = File(...)):
     try:
         inhalt = await file.read()
         inhalt_str = inhalt.decode("utf-8-sig")
+        
+        # Basis-Konfiguration laden und mit Web-Eingaben überschreiben
         config = artikel_repository.lade_konfiguration()
+        config["nur_Änderungen_zu_JA_ausgeben"] = 1 if nur_ja else 0
+        config["stueckartikel_aussortieren"] = 1 if stueck_aus else 0
+
         artikel_objekte = artikel_repository.lade_artikel_aus_string(inhalt_str)
         
         if not artikel_objekte:

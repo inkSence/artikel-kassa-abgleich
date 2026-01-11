@@ -13,7 +13,7 @@ def lade_konfiguration() -> Dict[str, Any]:
     config = file_handler.lese_json(CONFIG_DATEI)
     standard_config = {
         "mode": "local",
-        "nur_änderungen_zu_JA_ausgeben": 0,
+        "nur_Änderungen_zu_JA_ausgeben": 0,
         "ausschluss_ids": [],
         "stueckartikel_aussortieren": 0,
         "postfix_outputdatei_web": "vorschlaege_IN_KASSA"

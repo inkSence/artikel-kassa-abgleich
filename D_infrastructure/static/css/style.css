@@ -83,3 +83,33 @@ input[type="submit"]:disabled { background-color: #ccc; cursor: not-allowed; }
 }
 .config-title { font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
 .config-item { display: flex; justify-content: space-between; margin-bottom: 2px; }
+
+/* Web Settings Styles */
+.settings-box {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border: 1px solid #007bff;
+    border-radius: 8px;
+}
+.settings-title {
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.setting-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 0.95em;
+}
+.setting-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
