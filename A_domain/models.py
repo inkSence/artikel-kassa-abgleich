@@ -8,6 +8,11 @@ class AppMode(Enum):
     WEB = "web"
 
 
+class KassaartikelMissingException(Exception):
+    """Wird ausgelöst, wenn die Spalte 'kassaartikel' keine Werte (0 oder 1) enthält."""
+    pass
+
+
 @dataclass
 class Artikel:
     id: str

@@ -7,6 +7,7 @@ import os
 import logging
 from C_adapters import artikel_repository
 from B_application.use_cases import ArtikelSyncUseCase
+from A_domain.models import KassaartikelMissingException
 
 # Logging konfigurieren
 logging.basicConfig(
@@ -96,6 +97,8 @@ async def process_csv_api(
         
         return {"filename": safe_filename, "results": ergebnisse}
 
+    except KassaartikelMissingException as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
@@ -153,6 +156,8 @@ async def upload_csv(file: UploadFile = File(...)):
             headers={"Content-Disposition": f"attachment; filename={download_filename}"}
         )
 
+    except KassaartikelMissingException as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:

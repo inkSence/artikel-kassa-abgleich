@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
-from A_domain.models import Artikel
+from A_domain.models import Artikel, KassaartikelMissingException
 from D_infrastructure import file_handler
 
 CONFIG_DATEI = "config.json"
@@ -57,7 +57,13 @@ def _map_csv_daten_zu_artikel_liste(daten: List[Dict[str, str]]) -> List[Artikel
         try:
             ls_str = str(zeile.get('lagerstand', '0')).replace(',', '.')
             lagerstand = float(ls_str)
-            ist_kassa = str(zeile.get('kassaartikel')) == '1'
+            
+            # Prüfung auf fehlende Kassaartikel-Werte
+            kassa_val = zeile.get('kassaartikel')
+            if kassa_val is None or str(kassa_val).strip() == "":
+                raise KassaartikelMissingException("Aktiviere die Checkbox in LotzApp, damit das CSV in der Spalte kassaartikel Werte hat.")
+            
+            ist_kassa = str(kassa_val) == '1'
             
             artikel = Artikel(
                 id=str(zeile.get('ID', '')),

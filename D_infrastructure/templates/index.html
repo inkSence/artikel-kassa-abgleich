@@ -143,7 +143,10 @@
                     body: formData
                 });
                 
-                if (!response.ok) throw new Error('Fehler beim Verarbeiten');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Fehler beim Verarbeiten');
+                }
                 
                 const data = await response.json();
                 currentResults = data.results;
