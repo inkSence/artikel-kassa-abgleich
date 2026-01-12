@@ -4,13 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artikel Kassenabgleich</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=1.0.1">
 </head>
 <body>
     <div class="container">
         <h1>📦 Artikel Kassenabgleich</h1>
-        <p>Hier kommt die CSV-Datei hinein, die als Export von LotzApp entsteht.</p>
-        <p>Als Ergebnis werden die notwendigen Änderungen für die Kasse ermittelt.</p>
+
+        <div class="image-container">
+            <img src="{{ url_for('static', path='/img/erklärung_export.png') }}" 
+                 alt="Erklärung Export" 
+                 class="preview-img" 
+                 id="explanation-img">
+            <p class="img-hint">How-To Download Exportdatei (Klicken zum Vergrößern)</p>
+        </div>
+
+
         
         <form id="upload-form" enctype="multipart/form-data">
             <div id="settings-area" class="settings-box">
@@ -24,6 +32,8 @@
                     Stückartikel aussortieren
                 </label>
             </div>
+                    <p>Hier kommt die CSV-Datei hinein, die als Export von LotzApp entsteht.<br>
+                    Als Ergebnis werden die notwendigen Änderungen für die Kasse ermittelt.</p>
 
             <div id="drop-zone">
                 <p>📁 Datei hierher ziehen oder klicken zum Auswählen</p>
@@ -33,6 +43,8 @@
             </div>
             <div id="loading" class="hidden">Verarbeite Daten...</div>
         </form>
+
+
 
         <div id="result-area" class="result-container hidden">
             <h2>Vorschau der Änderungen</h2>
@@ -72,6 +84,12 @@
         {% endif %}
     </div>
 
+    <!-- Modal für vergrößerte Ansicht -->
+    <div id="image-modal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modal-img">
+    </div>
+
     <script>
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file');
@@ -84,6 +102,27 @@
         const resultBody = document.getElementById('result-body');
         const downloadBtn = document.getElementById('download-btn');
         const loading = document.getElementById('loading');
+
+        // Modal Logik
+        const modal = document.getElementById('image-modal');
+        const explanationImg = document.getElementById('explanation-img');
+        const modalImg = document.getElementById('modal-img');
+        const closeSpan = document.getElementsByClassName('close')[0];
+
+        explanationImg.onclick = function() {
+            modal.style.display = "block";
+            modalImg.src = this.src;
+        }
+
+        closeSpan.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
 
         // Konfiguration aus dem Backend
         const configPostfix = "{{ config.get('postfix_outputdatei_web', 'vorschlaege_IN_KASSA') }}";
