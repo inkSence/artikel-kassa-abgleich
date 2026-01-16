@@ -27,9 +27,16 @@ document.addEventListener('DOMContentLoaded', () => {
         filename: ""
     };
 
-    const config = {
-        postfix: (window.appConfig && window.appConfig.configPostfix) || "_vorschlaege_IN_KASSA"
-    };
+    // Konfiguration sicher aus dem DOM laden
+    const config = (() => {
+        const configElement = document.getElementById('app-config');
+        try {
+            return configElement ? JSON.parse(configElement.textContent) : { configPostfix: "_vorschlaege_IN_KASSA" };
+        } catch (e) {
+            console.error("Fehler beim Laden der Konfiguration:", e);
+            return { configPostfix: "_vorschlaege_IN_KASSA" };
+        }
+    })();
 
     // --- Modal Logik ---
     if (ui.explanationImg && ui.modal) {
@@ -155,6 +162,15 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.resultArea.classList.remove('hidden');
     }
 
+    const sanitizeForCsv = (val) => {
+        const str = String(val === null || val === undefined ? '' : val);
+        const dangerousStarts = ['=', '+', '-', '@', '\t', '\r'];
+        if (dangerousStarts.some(start => str.startsWith(start))) {
+            return `'${str}`;
+        }
+        return str;
+    };
+
     // --- CSV Download ---
     if (ui.downloadBtn) {
         ui.downloadBtn.addEventListener('click', () => {
@@ -163,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const headers = ['Name', 'ID', 'barcode', 'extnr', 'ändern_auf', 'einheit'];
             const csvRows = [
                 headers.join(';'),
-                ...state.results.map(res => headers.map(h => res[h] || '').join(';'))
+                ...state.results.map(res => headers.map(h => sanitizeForCsv(res[h])).join(';'))
             ];
             
             const csvContent = "\ufeff" + csvRows.join('\n');
@@ -175,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const baseName = dotIndex !== -1 ? state.filename.substring(0, dotIndex) : state.filename;
             
             link.href = url;
-            link.download = `${baseName}${config.postfix}.csv`;
+            link.download = `${baseName}${config.configPostfix}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
