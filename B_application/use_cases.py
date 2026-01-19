@@ -53,7 +53,8 @@ class ArtikelSyncUseCase:
                 'barcode': art.barcode,
                 'extnr': art.extnr,
                 'ändern_auf': soll_status,
-                'einheit': art.einheit
+                'einheit': art.einheit,
+                'gruppe': art.gruppe
             })
             
         return ergebnisse

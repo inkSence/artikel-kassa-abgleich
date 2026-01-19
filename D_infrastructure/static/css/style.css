@@ -80,6 +80,41 @@ input[type="submit"]:disabled { background-color: #ccc; cursor: not-allowed; }
 #loading { text-align: center; margin: 20px 0; font-weight: bold; color: #007bff; font-size: 1.2rem; }
 .footer { margin-top: 50px; font-size: 0.95rem; color: #666; text-align: center; border-top: 1px solid #eee; padding-top: 20px; }
 
+/* Filter Styles */
+.filter-box {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.filter-input {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    min-width: 200px;
+}
+.group-hint {
+    color: #666;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+.filter-error-msg {
+    color: #856404;
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
 .config-box {
     margin-top: 30px;
     padding: 20px;

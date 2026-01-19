@@ -22,6 +22,7 @@ class Artikel:
     einheit: str
     barcode: str = ""
     extnr: str = ""
+    gruppe: str = ""
 
     def berechne_soll_status(self) -> Optional[str]:
         """

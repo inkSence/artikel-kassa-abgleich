@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
         resultBody: document.getElementById('result-body'),
         downloadBtn: document.getElementById('download-btn'),
         loading: document.getElementById('loading'),
+        // Filter
+        groupFilter: document.getElementById('group-filter'),
+        filterError: document.getElementById('filter-error'),
         // Modal
         modal: document.getElementById('image-modal'),
         explanationImg: document.getElementById('explanation-img'),
@@ -127,6 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ui.noResultsMessage) ui.noResultsMessage.classList.toggle('hidden', hasResults);
         if (ui.resultsContent) ui.resultsContent.classList.toggle('hidden', !hasResults);
         if (ui.resultTitle) ui.resultTitle.classList.toggle('hidden', !hasResults);
+        
+        // Filter zurücksetzen bei neuem Display
+        if (ui.groupFilter) ui.groupFilter.value = '';
+        if (ui.filterError) ui.filterError.classList.add('hidden');
 
         ui.resultBody.innerHTML = '';
         
@@ -138,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const columns = [
                     { key: 'Name' },
                     { key: 'ID' },
+                    { key: 'gruppe' },
                     { key: 'barcode' },
                     { key: 'ändern_auf', isBold: true }
                 ];
@@ -160,6 +168,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         ui.resultArea.classList.remove('hidden');
+    }
+
+    // --- Filter Logik ---
+    if (ui.groupFilter) {
+        ui.groupFilter.addEventListener('input', () => {
+            const query = ui.groupFilter.value.trim();
+            
+            // Validierung: Nur Zahlen erlaubt (wenn nicht leer)
+            const isNumeric = /^\d*$/.test(query);
+            
+            if (ui.filterError) {
+                ui.filterError.classList.toggle('hidden', isNumeric);
+            }
+            
+            filterResultsByGroup(query);
+        });
+    }
+
+    function filterResultsByGroup(query) {
+        const rows = ui.resultBody.querySelectorAll('tr');
+        rows.forEach(row => {
+            // Die Gruppe steht in der 3. Spalte (Index 2)
+            const groupCell = row.cells[2];
+            if (groupCell) {
+                const groupValue = groupCell.textContent.trim();
+                // Wenn query leer ist, zeige alles. Sonst schaue, ob query genau groupValue entspricht
+                const isMatch = query === "" || groupValue === query;
+                row.classList.toggle('hidden', !isMatch);
+            }
+        });
     }
 
     const sanitizeForCsv = (val) => {

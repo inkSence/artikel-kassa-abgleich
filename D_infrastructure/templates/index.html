@@ -48,6 +48,15 @@
         <div id="result-area" class="result-container hidden">
             <h2 id="result-title">Vorschau der Änderungen</h2>
             
+            <div id="filter-area" class="filter-box">
+                <div class="filter-controls">
+                    <label for="group-filter">🔍 Filter nach Artikelgruppe:</label>
+                    <input type="text" id="group-filter" placeholder="Gruppen-ID eingeben..." class="filter-input">
+                    <span class="group-hint">(62 = Obst  |  63 = Gemüse)</span>
+                    <span id="filter-error" class="filter-error-msg hidden">Bitte nur die IDs der Artikelgruppen als Zahlen eingeben.</span>
+                </div>
+            </div>
+
             <div id="no-results-message" class="hidden">
                 <p class="success-message">
                     Alle Bestände passen zu dem Feld "in Kassa". ✅ Sie müssen für die Kasse keine Artikel bearbeiten.
@@ -61,6 +70,7 @@
                         <tr>
                             <th>Name</th>
                             <th>ID</th>
+                            <th>Gruppe</th>
                             <th>Barcode</th>
                             <th>Ändern auf</th>
                         </tr>

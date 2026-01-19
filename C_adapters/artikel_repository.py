@@ -72,7 +72,8 @@ def _map_csv_daten_zu_artikel_liste(daten: List[Dict[str, str]]) -> List[Artikel
                 ist_kassaartikel=ist_kassa,
                 einheit=zeile.get('einheit', ''),
                 barcode=zeile.get('barcode', ''),
-                extnr=zeile.get('extnr', '')
+                extnr=zeile.get('extnr', ''),
+                gruppe=zeile.get('gruppe', '')
             )
             artikel_liste.append(artikel)
         except (ValueError, TypeError) as e:
