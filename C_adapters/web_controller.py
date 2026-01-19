@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 import io
 import os
 import logging
+import re
 from C_adapters import artikel_repository
 from B_application.use_cases import ArtikelSyncUseCase
 from A_domain.models import KassaartikelMissingException
@@ -54,6 +55,13 @@ app.mount("/static", StaticFiles(directory=static_pfad), name="static")
 
 templates = Jinja2Templates(directory=template_pfad)
 
+def s_dateiname_reinigen(name: str) -> str:
+    """Entfernt potenziell gefährliche Zeichen aus Dateinamen."""
+    # Nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche erlauben
+    name = os.path.basename(name)
+    name = re.sub(r'[^a-zA-Z0-9._-]', '_', name)
+    return name
+
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Zeigt die Startseite mit Upload-Formular via Jinja2 Template."""
@@ -102,7 +110,7 @@ async def process_csv_api(
         ergebnisse = use_case.execute(artikel_objekte)
         
         # Dateiname für die UI säubern
-        safe_filename = os.path.basename(file.filename)
+        safe_filename = s_dateiname_reinigen(file.filename)
         
         return {"filename": safe_filename, "results": ergebnisse}
 
@@ -148,13 +156,13 @@ async def upload_csv(file: UploadFile = File(...)):
         ergebnisse = use_case.execute(artikel_objekte)
 
         # 5. Export-String generieren
-        ausgabe_felder = ['Name', 'ID', 'barcode', 'extnr', 'ändern_auf', 'einheit']
+        ausgabe_felder = ['Name', 'ID', 'gruppe', 'barcode', 'extnr', 'ändern_auf', 'einheit']
         csv_export = artikel_repository.erzeuge_export_string(ergebnisse, ausgabe_felder)
 
         # Dateiname für den Download vorbereiten (Postfix aus Config vor der Endung)
-        safe_filename = os.path.basename(file.filename)
+        safe_filename = s_dateiname_reinigen(file.filename)
         original_name = os.path.splitext(safe_filename)[0]
-        postfix = config.get("postfix_outputdatei_web", "vorschlaege_IN_KASSA")
+        postfix = s_dateiname_reinigen(config.get("postfix_outputdatei_web", "vorschlaege_IN_KASSA"))
         download_filename = f"{original_name}{postfix}.csv"
 
         # 6. Als Download zurückgeben

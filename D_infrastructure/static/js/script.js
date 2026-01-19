@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.downloadBtn.addEventListener('click', () => {
             if (state.results.length === 0) return;
             
-            const headers = ['Name', 'ID', 'barcode', 'extnr', 'ändern_auf', 'einheit'];
+            const headers = ['Name', 'ID', 'gruppe', 'barcode', 'extnr', 'ändern_auf', 'einheit'];
             const csvRows = [
                 headers.join(';'),
                 ...state.results.map(res => headers.map(h => sanitizeForCsv(res[h])).join(';'))
