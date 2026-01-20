@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artikel Kassenabgleich</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=1.0.4">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=1.0.5">
 </head>
 <body>
     <div class="container">
@@ -84,13 +84,6 @@
             <p><a href="/" class="restart-link">Erneut verarbeiten</a></p>
         </div>
 
-        <div class="config-box">
-            <div class="config-title">⚙️ Konfiguration:</div>
-            <div class="config-item">
-                <span>Ignorierte Artikel-IDs:</span>
-                <span>{{ config.ausschluss_ids | join(', ') }}</span>
-            </div>
-        </div>
 
         {% if show_config %}
         <div class="config-box">
@@ -117,7 +110,7 @@
             "configPostfix": config.get('postfix_outputdatei_web', 'vorschlaege_IN_KASSA')
         } | tojson }}
     </script>
-    <script src="{{ url_for('static', path='/js/script.js') }}?v=1.0.3"></script>
+    <script src="{{ url_for('static', path='/js/script.js') }}?v=1.0.4"></script>
 
     <div class="footer">
         <p>Schreibt mir eine E-Mail, wenn es Fragen gibt oder etwas nicht richtig funktioniert: post[at]philipplack.de</p>

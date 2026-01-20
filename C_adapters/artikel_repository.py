@@ -14,7 +14,6 @@ def lade_konfiguration() -> Dict[str, Any]:
     standard_config = {
         "mode": "local",
         "nur_Änderungen_zu_JA_ausgeben": 0,
-        "ausschluss_ids": [],
         "stueckartikel_aussortieren": 0,
         "postfix_outputdatei_web": "vorschlaege_IN_KASSA"
     }
