@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artikel Kassenabgleich</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=1.0.3">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}?v=1.0.4">
 </head>
 <body>
     <div class="container">
@@ -21,19 +21,8 @@
 
         
         <form id="upload-form" enctype="multipart/form-data">
-            <div id="settings-area" class="settings-box">
-                <div class="settings-title">⚙️ Einstellungen für diesen Upload:</div>
-                <label class="setting-option">
-                    <input type="checkbox" id="check-nur-ja" {% if config.nur_Änderungen_zu_JA_ausgeben %}checked{% endif %}>
-                    Nur Änderungen zu JA ausgeben
-                </label>
-                <label class="setting-option">
-                    <input type="checkbox" id="check-stueck-aus" {% if config.stueckartikel_aussortieren %}checked{% endif %}>
-                    Stückartikel aussortieren
-                </label>
-            </div>
-                    <p>Hier kommt die CSV-Datei hinein, die als Export von LotzApp entsteht.<br>
-                    Als Ergebnis werden die notwendigen Änderungen für die Kasse ermittelt.</p>
+            <p>Hier kommt die CSV-Datei hinein, die als Export von LotzApp entsteht.<br>
+            Als Ergebnis werden die notwendigen Änderungen für die Kasse ermittelt.</p>
 
             <div id="drop-zone">
                 <p>📁 Datei hierher ziehen oder klicken zum Auswählen</p>
@@ -49,6 +38,20 @@
             <h2 id="result-title">Vorschau der Änderungen</h2>
             
             <div id="filter-area" class="filter-box">
+                <div class="filter-row">
+                    <label class="filter-checkbox">
+                        <input type="checkbox" id="filter-ja" checked> Änderungen zu JA
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" id="filter-nein" checked> Änderungen zu NEIN
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" id="filter-stueck" checked> Stückartikel anzeigen
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" id="filter-kg" checked> Gewichtsartikel anzeigen
+                    </label>
+                </div>
                 <div class="filter-controls">
                     <label for="group-filter">🔍 Filter nach Artikelgruppe:</label>
                     <input type="text" id="group-filter" placeholder="Gruppen-ID eingeben..." class="filter-input">
@@ -114,7 +117,7 @@
             "configPostfix": config.get('postfix_outputdatei_web', 'vorschlaege_IN_KASSA')
         } | tojson }}
     </script>
-    <script src="{{ url_for('static', path='/js/script.js') }}?v=1.0.2"></script>
+    <script src="{{ url_for('static', path='/js/script.js') }}?v=1.0.3"></script>
 
     <div class="footer">
         <p>Schreibt mir eine E-Mail, wenn es Fragen gibt oder etwas nicht richtig funktioniert: post[at]philipplack.de</p>

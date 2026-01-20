@@ -6,6 +6,7 @@ import io
 import os
 import logging
 import re
+from typing import Optional
 from C_adapters import artikel_repository
 from B_application.use_cases import ArtikelSyncUseCase
 from A_domain.models import KassaartikelMissingException
@@ -76,8 +77,8 @@ async def index(request: Request):
 @app.post("/api/process")
 async def process_csv_api(
     file: UploadFile = File(...),
-    nur_ja: bool = Form(False),
-    stueck_aus: bool = Form(False)
+    nur_ja: Optional[bool] = Form(None),
+    stueck_aus: Optional[bool] = Form(None)
 ):
     """Endpunkt zum Verarbeiten einer CSV, gibt JSON für die UI zurück."""
     if not file.filename.lower().endswith('.csv'):
@@ -96,10 +97,14 @@ async def process_csv_api(
             
         inhalt_str = inhalt.decode("utf-8-sig")
         
-        # Basis-Konfiguration laden und mit Web-Eingaben überschreiben
+        # Basis-Konfiguration laden
         config = artikel_repository.lade_konfiguration()
-        config["nur_Änderungen_zu_JA_ausgeben"] = 1 if nur_ja else 0
-        config["stueckartikel_aussortieren"] = 1 if stueck_aus else 0
+        
+        # Nur überschreiben, wenn explizit im Formular gesendet
+        if nur_ja is not None:
+            config["nur_Änderungen_zu_JA_ausgeben"] = 1 if nur_ja else 0
+        if stueck_aus is not None:
+            config["stueckartikel_aussortieren"] = 1 if stueck_aus else 0
 
         artikel_objekte = artikel_repository.lade_artikel_aus_string(inhalt_str)
         

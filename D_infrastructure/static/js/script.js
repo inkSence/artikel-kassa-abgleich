@@ -4,9 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dropZone: document.getElementById('drop-zone'),
         fileInput: document.getElementById('file'),
         fileInfo: document.getElementById('file-info'),
-        settingsArea: document.getElementById('settings-area'),
-        checkNurJa: document.getElementById('check-nur-ja'),
-        checkStueckAus: document.getElementById('check-stueck-aus'),
         resultArea: document.getElementById('result-area'),
         resultTitle: document.getElementById('result-title'),
         noResultsMessage: document.getElementById('no-results-message'),
@@ -15,6 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadBtn: document.getElementById('download-btn'),
         loading: document.getElementById('loading'),
         // Filter
+        filterJa: document.getElementById('filter-ja'),
+        filterNein: document.getElementById('filter-nein'),
+        filterStueck: document.getElementById('filter-stueck'),
+        filterKg: document.getElementById('filter-kg'),
         groupFilter: document.getElementById('group-filter'),
         filterError: document.getElementById('filter-error'),
         // Modal
@@ -57,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleLoading = (isLoading) => {
         ui.loading.classList.toggle('hidden', !isLoading);
         ui.dropZone.classList.toggle('hidden', isLoading);
-        ui.settingsArea.classList.toggle('hidden', isLoading);
         if (isLoading) ui.resultArea.classList.add('hidden');
     };
 
@@ -100,8 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('nur_ja', ui.checkNurJa.checked);
-        formData.append('stueck_aus', ui.checkStueckAus.checked);
 
         try {
             const response = await fetch('/api/process', { method: 'POST', body: formData });
@@ -132,6 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ui.resultTitle) ui.resultTitle.classList.toggle('hidden', !hasResults);
         
         // Filter zurücksetzen bei neuem Display
+        if (ui.filterJa) ui.filterJa.checked = true;
+        if (ui.filterNein) ui.filterNein.checked = true;
+        if (ui.filterStueck) ui.filterStueck.checked = true;
+        if (ui.filterKg) ui.filterKg.checked = true;
         if (ui.groupFilter) ui.groupFilter.value = '';
         if (ui.filterError) ui.filterError.classList.add('hidden');
 
@@ -140,6 +142,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hasResults) {
             results.forEach(row => {
                 const tr = document.createElement('tr');
+                // Metadaten für Filterung speichern
+                tr.dataset.status = row['ändern_auf'] || '';
+                tr.dataset.einheit = row['einheit'] || '';
+                tr.dataset.gruppe = row['gruppe'] || '';
                 
                 // Definiere Spalten-Mapping (Key im Objekt -> Textinhalt)
                 const columns = [
@@ -168,36 +174,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         ui.resultArea.classList.remove('hidden');
+        applyAllFilters();
     }
 
     // --- Filter Logik ---
-    if (ui.groupFilter) {
-        ui.groupFilter.addEventListener('input', () => {
-            const query = ui.groupFilter.value.trim();
-            
-            // Validierung: Nur Zahlen erlaubt (wenn nicht leer)
-            const isNumeric = /^\d*$/.test(query);
-            
-            if (ui.filterError) {
-                ui.filterError.classList.toggle('hidden', isNumeric);
+    const getFilterValues = () => ({
+        ja: ui.filterJa ? ui.filterJa.checked : true,
+        nein: ui.filterNein ? ui.filterNein.checked : true,
+        stueck: ui.filterStueck ? ui.filterStueck.checked : true,
+        kg: ui.filterKg ? ui.filterKg.checked : true,
+        group: ui.groupFilter ? ui.groupFilter.value.trim() : ""
+    });
+
+    function applyAllFilters() {
+        const filters = getFilterValues();
+        const rows = ui.resultBody.querySelectorAll('tr');
+        
+        // Validierung der Gruppen-ID
+        const isNumeric = /^\d*$/.test(filters.group);
+        if (ui.filterError) {
+            ui.filterError.classList.toggle('hidden', isNumeric);
+        }
+
+        rows.forEach(row => {
+            const status = row.dataset.status;
+            const einheit = row.dataset.einheit;
+            const gruppe = row.dataset.gruppe;
+
+            // 1. Basis-Regel: Ohne Einheit immer ausblenden
+            if (!einheit || einheit.trim() === "") {
+                row.classList.add('hidden');
+                return;
             }
-            
-            filterResultsByGroup(query);
+
+            // 2. Filter nach Status (JA/NEIN)
+            let matchStatus = false;
+            if (status === 'Ja' && filters.ja) matchStatus = true;
+            if (status === 'Nein' && filters.nein) matchStatus = true;
+
+            // 3. Filter nach Einheit (Stück/kg)
+            let matchEinheit = false;
+            if (einheit === 'Stück' && filters.stueck) matchEinheit = true;
+            if (einheit === 'kg' && filters.kg) matchEinheit = true;
+
+            // 4. Filter nach Gruppe
+            let matchGroup = (filters.group === "" || gruppe === filters.group);
+
+            const isVisible = matchStatus && matchEinheit && matchGroup;
+            row.classList.toggle('hidden', !isVisible);
         });
     }
 
-    function filterResultsByGroup(query) {
-        const rows = ui.resultBody.querySelectorAll('tr');
-        rows.forEach(row => {
-            // Die Gruppe steht in der 3. Spalte (Index 2)
-            const groupCell = row.cells[2];
-            if (groupCell) {
-                const groupValue = groupCell.textContent.trim();
-                // Wenn query leer ist, zeige alles. Sonst schaue, ob query genau groupValue entspricht
-                const isMatch = query === "" || groupValue === query;
-                row.classList.toggle('hidden', !isMatch);
-            }
-        });
+    [ui.filterJa, ui.filterNein, ui.filterStueck, ui.filterKg].forEach(el => {
+        if (el) el.addEventListener('change', applyAllFilters);
+    });
+
+    if (ui.groupFilter) {
+        ui.groupFilter.addEventListener('input', applyAllFilters);
     }
 
     const sanitizeForCsv = (val) => {
